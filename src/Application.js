@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { auth, database } from './firebase';
+import map from 'lodash/map';
 import CurrentUser from './CurrentUser';
 import SignIn from './SignIn';
 import NewRestaurant from './NewRestaurant';
@@ -11,20 +12,26 @@ class Application extends Component {
     super(props);
 
     this.state = {
-      currentUser: null
+      currentUser: null,
+      restaurants: null
     };
+
+    this.restaurantsRef = database.ref('/restaurants');
   }
 
   componentDidMount(){
     auth.onAuthStateChanged((currentUser)=>{
-      console.log('AUTH_CHANGE', currentUser)
       this.setState({currentUser});
-    })
+
+      this.restaurantsRef.on('value', (snapshot)=> {
+        this.setState({restaurants: snapshot.val() });
+      });
+    });
   }
 
   render() {
 
-    const { currentUser } = this.state;
+    const { currentUser, restaurants } = this.state;
 
     return (
       <div className="Application">
@@ -33,7 +40,15 @@ class Application extends Component {
         </header>
         <div>
           {!currentUser && <SignIn />}
-          {currentUser && <CurrentUser user={ currentUser }/>}
+          {currentUser &&
+            <div>
+              <NewRestaurant />
+              <Restaurants restaurants={restaurants}/>
+              <CurrentUser user={ currentUser }/>
+
+
+            </div>
+          }
         </div>
       </div>
     );
